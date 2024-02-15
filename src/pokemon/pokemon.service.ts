@@ -6,11 +6,11 @@ import { Pokemon } from './entities/pokemon.entity';
 
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, isValidObjectId } from 'mongoose';
+import { of } from 'rxjs';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Injectable()
-export class PokemonService {
-
-  
+export class PokemonService { 
   constructor(
     @InjectModel( Pokemon.name)
     private readonly pokemonModel: Model<Pokemon>
@@ -28,8 +28,12 @@ export class PokemonService {
     }
   }
 
-  findAll() {
-    return this.pokemonModel.find();
+  async findAll({limit= 10, offset = 0}: PaginationDto) {
+    
+    return await this.pokemonModel.find()
+    .limit(+limit)
+    .skip(+offset)
+    .select('-__v');
   }
 
   async findOne(term: string) {
@@ -69,9 +73,6 @@ export class PokemonService {
   }
 
   async remove(id: string) {
-    // const pokemon = await this.findOne(term);
-
-    // await pokemon.deleteOne();
     const {deletedCount, acknowledged} = await this.pokemonModel.deleteOne({_id : id})
     
     if(deletedCount === 0 ) 
